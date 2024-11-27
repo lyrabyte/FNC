@@ -63,11 +63,11 @@ function TitleState:initializeGfAnimation()
     )
 end
 
-function TitleState:setupIntroSequence()
+function TitleState:setupIntroSequence() -- The timing is wrong on the SDK Simulator, but its great on the actual hardware, Dont touch
     self.textLines = {
         {beat = 1.0, action = function() self:createCoolText({"Lyrabyte"}) end},
-        {beat = 2.4, action = function() self:addMoreText("presents") end},
-        {beat = 3.3, action = self.deleteCoolText},
+        {beat = 2.2, action = function() self:addMoreText("presents") end},
+        {beat = 3.1, action = self.deleteCoolText},
         {beat = 4.01, action = function() self:createCoolText({"A Port", "of"}) end},
         {beat = 5.6, action = self.showImage},
         {beat = 6.4, action = function()
@@ -80,17 +80,17 @@ function TitleState:setupIntroSequence()
                 self:addMoreText(self.currentRandomIntroText[1] or "")
             end
         end},
-        {beat = 8.98, action = function()
+        {beat = 8.78, action = function()
             if self.currentRandomIntroText then
                 self:addMoreText(self.currentRandomIntroText[2] or "")
                 self.currentRandomIntroText = nil
             end
         end},
-        {beat = 9.55, action = self.deleteCoolText},
-        {beat = 10.35, action = function() self:addMoreText("Friday") end},
-        {beat = 11.25, action = function() self:addMoreText("Night") end},
-        {beat = 12.07, action = function() self:addMoreText("Crankin'") end},
-        {beat = 13, action = self.skipIntro},
+        {beat = 9.65, action = self.deleteCoolText},
+        {beat = 10.30, action = function() self:addMoreText("Friday") end},
+        {beat = 11.20, action = function() self:addMoreText("Night") end},
+        {beat = 12.02, action = function() self:addMoreText("Crankin'") end},
+        {beat = 13.2, action = self.skipIntro},
     }
 
     table.sort(self.textLines, function(a, b) return a.beat < b.beat end)
