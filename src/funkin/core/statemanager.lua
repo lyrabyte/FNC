@@ -38,7 +38,10 @@ function StateManager:switchTo(stateName, transitionData)
     end
 
     if self.currentState and self.currentState.onEnter then
+        print("Calling onEnter for state:", stateName) 
         self.currentState:onEnter(transitionData)
+    else
+        print("No onEnter for state:", stateName) 
     end
 
     self:performTransition(function()
@@ -82,6 +85,7 @@ function StateManager:draw()
 end
 
 function StateManager:performTransition(onComplete)
+
     if onComplete then
         onComplete()
     end

@@ -5,7 +5,7 @@ local gfx <const> = playdate.graphics
 
 class("FreeplayState").extends()
 
-function FreeplayState:init(introMusic, mainMenuState, titleState, freeplayPath, stateManager)
+function FreeplayState:init(introMusic, mainMenuState, titleState, stateManager)
     FreeplayState.super.init(self)
     self.stateManager = stateManager
 

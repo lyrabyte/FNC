@@ -5,6 +5,10 @@ import "CoreLibs/object"
 import "/funkin/core/statemanager"
 import "/ui/title/titlestate"
 import "/ui/mainmenu/mainmenustate"
+import "/ui/options/optionsstate"
+import "/ui/credits/creditsstate"
+import "/ui/story/storystate"
+
 import "/funkin/music/conductor"
 
 local gfx <const> = playdate.graphics
@@ -25,7 +29,10 @@ local stateManager = StateManager()
 
 local titleScreen = TitleState(stateManager, conductor, introMusic, funkinMusic, funkinSounds, funkinImages, funkinFont, introTexts, nil)
 local mainMenuState = MainMenuState(introMusic, funkinMusic, funkinSounds, funkinImages, titleScreen, stateManager)
-local freeplayState = FreeplayState(introMusic, mainMenuState, titleScreen, freeplayPath, stateManager)
+local freeplayState = FreeplayState(introMusic, mainMenuState, titleScreen, stateManager)
+local optionsState = OptionsState(introMusic, mainMenuState, titleScreen, stateManager)
+local storyState = StoryState(introMusic, mainMenuState, titleScreen, stateManager)
+local creditsState = CreditsState(introMusic, mainMenuState, titleState, funkinFont, funkinMusic, stateManager)
 
 titleScreen.mainMenuState = mainMenuState
 mainMenuState.freeplayState = freeplayState
@@ -34,6 +41,9 @@ mainMenuState.freeplayState = freeplayState
 stateManager:addState("title", titleScreen)
 stateManager:addState("mainMenu", mainMenuState)
 stateManager:addState("freeplay", freeplayState)
+stateManager:addState("options", optionsState)
+stateManager:addState("credits", creditsState)
+stateManager:addState("story", storyState)
 
 stateManager:switchTo("title")
 
