@@ -2,49 +2,42 @@ import "CoreLibs/graphics"
 import "CoreLibs/timer"
 import "CoreLibs/object"
 
+import "/funkin/core/statemanager"
 import "/ui/title/titlestate"
 import "/ui/mainmenu/mainmenustate"
 import "/funkin/music/conductor"
 
 local gfx <const> = playdate.graphics
 
-local funkinPath = "assets/images/funkin"
-local mainMenuBG = "assets/images/mainmenu/menuBG"
-
-local gfDanceTitle = "assets/images/title/gfDanceTitle"
-local gfRingTone = "assets/music/title/girlfriendsRingtone"
-
+-- asset path init lol
+local funkinMusic = "assets/music/"
+local funkinSounds = "assets/sounds/"
+local funkinImages = "assets/images/"
+local funkinFont = gfx.font.new("assets/fonts/phantommuff")
 local introTexts = "assets/data/introTexts.txt"
-local mainMenuPath = "assets/images/mainmenu/"
-local menuAudioPath = "assets/sounds/menus/"
-local freeplayPath = "assets/images/freeplay/"
-
 local musicPath = "assets/music/title/freakyMenu"
-local confirm = "assets/sounds/menus/Confirm"
-
-local phantomMuffFont = gfx.font.new("assets/fonts/phantommuff")
 
 local conductor = Conductor(musicPath)
 
 local introMusic = playdate.sound.fileplayer.new(musicPath)
 
-local titleScreen = nil
-local mainMenuState = nil
-local freeplayState = nil
+local stateManager = StateManager()
 
-titleScreen = TitleState(conductor, introMusic, funkinPath, gfDanceTitle, gfRingTone, confirm, phantomMuffFont, introTexts, nil)
-
-mainMenuState = MainMenuState(mainMenuBG, mainMenuPath, menuAudioPath, titleScreen)
-freeplayState = FreeplayState(mainMenuState, titleScreen, freeplayPath)
+local titleScreen = TitleState(stateManager, conductor, introMusic, funkinMusic, funkinSounds, funkinImages, funkinFont, introTexts, nil)
+local mainMenuState = MainMenuState(introMusic, funkinMusic, funkinSounds, funkinImages, titleScreen, stateManager)
+local freeplayState = FreeplayState(introMusic, mainMenuState, titleScreen, freeplayPath, stateManager)
 
 titleScreen.mainMenuState = mainMenuState
 mainMenuState.freeplayState = freeplayState
 
-currentState = titleScreen
+-- state init lol
+stateManager:addState("title", titleScreen)
+stateManager:addState("mainMenu", mainMenuState)
+stateManager:addState("freeplay", freeplayState)
+
+stateManager:switchTo("title")
 
 function playdate.update()
-    if currentState and currentState.update then
-        currentState:update()
-    end
+    stateManager:update()
     playdate.timer.updateTimers()
 end

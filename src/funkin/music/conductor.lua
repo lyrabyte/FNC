@@ -7,28 +7,28 @@ class("Conductor").extends()
 function Conductor:init(musicPath)
     Conductor.super.init(self)
 
-    
+    assert(musicPath and #musicPath > 0, "Invalid music path provided.")
     self.musicPath = musicPath
     self.metadataPath = musicPath .. "-metadata.json"
 
-    
     self.bpm = 120
     self.timeSignatureNumerator = 4
     self.timeSignatureDenominator = 4
-    self.stepsPerBeat = 4 
+    self.stepsPerBeat = 4
     self.beatsPerMeasure = self.timeSignatureNumerator
     self.stepLengthMs = (60 / self.bpm) * 1000 / self.stepsPerBeat
     self.globalStep = 0
     self.currentTimeMs = 0
-    self.lastStepTime = playdate.getCurrentTimeMilliseconds() 
+    self.lastStepTime = playdate.getCurrentTimeMilliseconds()
 
-    
     self.onStepHitCallbacks = {}
 
-    
-    self:parseMetadata()
+    if playdate.file.exists(self.metadataPath) then
+        self:parseMetadata()
+    else
+        print("Conductor: Metadata file not found. Using default BPM and Time Signature.")
+    end
 
-    
     self:startStepTimer()
 end
 
@@ -160,6 +160,7 @@ function Conductor:update()
 end
 
 function Conductor:onStepHit(callback)
+    assert(callback and type(callback) == "function", "Callback must be a function.")
     table.insert(self.onStepHitCallbacks, callback)
 end
 

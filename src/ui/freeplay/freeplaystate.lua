@@ -5,9 +5,10 @@ local gfx <const> = playdate.graphics
 
 class("FreeplayState").extends()
 
-function FreeplayState:init(mainMenuState, titleState, freeplayPath)
+function FreeplayState:init(introMusic, mainMenuState, titleState, freeplayPath, stateManager)
     FreeplayState.super.init(self)
-    
+    self.stateManager = stateManager
+
     self.mainMenuState = mainMenuState 
     self.titleState = titleState 
     
@@ -32,6 +33,6 @@ function FreeplayState:handleInput()
         self.mainMenuState:resetWipe()
         
         
-        currentState = self.mainMenuState
+        self.stateManager:switchTo("mainMenu")
     end
 end

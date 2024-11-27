@@ -5,15 +5,18 @@ class("Bopper").extends()
 function Bopper:init(conductor)
     Bopper.super.init(self)
 
+    if not conductor or type(conductor.onStepHit) ~= "function" then
+        error("Invalid Conductor passed to Bopper.")
+    end
+
     self.conductor = conductor
     self.shouldBop = true
-    self.beatScale = 0.04 
+    self.beatScale = 0.04
     self.bumpTriggered = false
     self.bumpValue = 0
     self.lastBopTime = 0
     self.bopFrequencyMultiplier = 1 
 
-    
     self.conductor:onStepHit(function(step)
         self:onStepHit(step)
     end)

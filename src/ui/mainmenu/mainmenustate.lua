@@ -1,26 +1,30 @@
 import "CoreLibs/graphics"
-import "../title/titlestate"
+import "../title/titleState"
 import "../freeplay/freeplaystate"
+
 local gfx <const> = playdate.graphics
 
 class("MainMenuState").extends()
 
-function MainMenuState:init(mainMenuBG, mainMenuPath, menuAudioPath, titleState)
+function MainMenuState:init(introMusic, funkinMusic, funkinSounds, funkinImages, titleScreen, stateManager)
     MainMenuState.super.init(self)
 
-    self.titleState = titleState 
+    self.stateManager = stateManager
+    self.titleScreen = titleScreen 
     self.freeplayState = FreeplayState(self) 
 
-    self.mainMenuPath = mainMenuPath
-    self.menuAudioPath = menuAudioPath 
-    self.scrollSoundPath = menuAudioPath .. "scroll" 
-    self.confirmSoundPath = menuAudioPath .. "Confirm" 
+    self.funkinMusic = funkinMusic
+    self.funkinSounds = funkinSounds
+    self.funkinImages = funkinImages
+
+    self.scrollSoundPath = self.funkinSounds .. "menus/scroll"
+    self.confirmSoundPath = self.funkinSounds .. "menus/Confirm"
     self.wipeHeight = 0
     self.wipeSpeed = 20
     self.gradientHeight = 20
     self.wipeCompleted = false
 
-    self.mainMenuBG = gfx.image.new(mainMenuBG)
+    self.mainMenuBG = gfx.image.new(self.funkinImages .. "mainmenu/menuBG")
     if not self.mainMenuBG then
         error("Failed to load mainMenuBG image!")
     end
@@ -41,41 +45,36 @@ function MainMenuState:init(mainMenuBG, mainMenuPath, menuAudioPath, titleState)
     self.defaultScale = 0.6
 
     for _, option in ipairs(self.menuOptions) do
-        option.image0 = gfx.image.new(mainMenuPath .. option.name .. "0")
-        option.image1 = gfx.image.new(mainMenuPath .. option.name .. "1")
+        option.image0 = gfx.image.new(self.funkinImages .. "mainmenu/" .. option.name .. "0")
+        option.image1 = gfx.image.new(self.funkinImages .. "mainmenu/" .. option.name .. "1")
 
         if not option.image0 or not option.image1 then
             error("Failed to load images for " .. option.name)
         end
 
-        
         option.yPosition = 0
     end
 
-    
     self.scrollSound = playdate.sound.sampleplayer.new(self.scrollSoundPath)
     if not self.scrollSound then
         print("Error: Failed to load scroll sound.")
     end
 
-    
     self.confirmSound = playdate.sound.sampleplayer.new(self.confirmSoundPath)
     if not self.confirmSound then
         print("Error: Failed to load confirm sound.")
     end
 
-    
     self.isFlashing = false
     self.flashState = false
     self.flashTimer = nil
-    
 end
 
 
-function MainMenuState:setTitleState(titleState)
-    self.titleState = titleState
+function MainMenuState:settitleScreen(titleScreen)
+    self.titleScreen = titleScreen
     
-    self.confirmSound = playdate.sound.fileplayer.new(self.titleState.confirm)
+    self.confirmSound = playdate.sound.fileplayer.new(self.titleScreen.confirm)
     if not self.confirmSound then
         print("Error: Failed to load confirm sound.")
     end
@@ -108,9 +107,13 @@ function MainMenuState:update()
     gfx.setImageDrawMode(gfx.kDrawModeCopy)
     self.scaledBG:draw(0, 0)
     gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
-    if not self.titleState.introMusic:isPlaying() then
-        self.titleState.introMusic:play()
+    
+    if self.titleScreen.introMusic and not self.titleScreen.introMusic:isPlaying() then
+        self.titleScreen.introMusic:play()
+    elseif not self.titleScreen.introMusic then
+        print("Error: introMusic is not set in titleScreen.")
     end
+
     if not self.wipeCompleted then
         self:performWipe()
     else
@@ -147,13 +150,10 @@ function MainMenuState:animateOptions()
             option.targetScale = self.defaultScale
         end
 
-        
         option.scale = option.scale + (option.targetScale - option.scale) * self.animationSpeed
 
-        
         local targetY = centerY + ((i - (self.selectedIndex + 0.5)) * self.lineSpacing) + option.yModifier
 
-        
         option.yPosition = option.yPosition + (targetY - option.yPosition) * self.animationSpeed
     end
 end
@@ -246,7 +246,7 @@ function MainMenuState:handleInput()
     elseif playdate.buttonJustPressed(playdate.kButtonDown) then
         self:changeSelection(1)
     elseif playdate.buttonJustPressed(playdate.kButtonB) then
-        self:transitionToTitleState()
+        self:transitionTotitleScreen()
     elseif playdate.buttonJustPressed(playdate.kButtonA) then
         self:confirmSelection()
     end
@@ -286,7 +286,13 @@ function MainMenuState:confirmSelection()
             
             local selectedOption = self.menuOptions[self.selectedIndex].name
             if selectedOption == "Freeplay" then
-                currentState = self.freeplayState 
+                self.stateManager:switchTo("freeplay")
+            elseif selectedOption == "StoryMode" then
+                self.stateManager:switchTo("story")
+            elseif selectedOption == "Options" then
+                self.stateManager:switchTo("options")
+            elseif selectedOption == "Credits" then
+                self.stateManager:switchTo("credits")
             else
                 print("Option Selected: " .. selectedOption)
             end
@@ -294,7 +300,7 @@ function MainMenuState:confirmSelection()
     end
 end
 
-function MainMenuState:transitionToTitleState()
+function MainMenuState:transitionTotitleScreen()
     
     self.wipeCompleted = false
 
@@ -304,14 +310,11 @@ function MainMenuState:transitionToTitleState()
     end
 
     
-    self.titleState:skipIntro()
+    self.titleScreen:skipIntro()
 
-    
-    print("Transitioning back to TitleState") 
-    currentState = self.titleState
+    self.stateManager:switchTo("title")
 
-    
-    self.titleState.onExit = function()
+    self.titleScreen.onExit = function()
         self:resetWipe()
     end
 end
