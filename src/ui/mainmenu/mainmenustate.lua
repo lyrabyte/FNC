@@ -18,7 +18,7 @@ function MainMenuState:init(introMusic, funkinMusic, funkinSounds, funkinImages,
     self.funkinImages = funkinImages
 
     self.scrollSoundPath = self.funkinSounds .. "menus/scroll"
-    self.confirmSoundPath = self.funkinSounds .. "menus/Confirm"
+    self.confirmSoundPath = self.funkinSounds .. "menus/confirm"
     self.wipeHeight = 0
     self.wipeSpeed = 20
     self.gradientHeight = 20

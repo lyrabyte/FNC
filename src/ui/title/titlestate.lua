@@ -32,8 +32,8 @@ function TitleState:init(stateManager, conductor, audioPlayer, funkinMusic, funk
     assert(funkinMusic .. "title/girlfriendsRingtone" and (funkinMusic .. "title/girlfriendsRingtone") ~= "", "Error: girlfriendsRingtone must be a valid path")
     self.gfRingTone = funkinMusic .. "title/girlfriendsRingtone"
     
-    assert(funkinSounds .. "menus/Confirm" and (funkinSounds .. "menus/Confirm") ~= "", "Error: confirm must be a valid path")
-    self.confirm = funkinSounds .. "menus/Confirm"
+    assert(funkinSounds .. "menus/confirm" and (funkinSounds .. "menus/confirm") ~= "", "Error: confirm must be a valid path")
+    self.confirm = funkinSounds .. "menus/confirm"
     
     self.gfScale, self.gfX, self.gfY = 0.28, 305, 180
     self.gfCurrentFrame, self.gfAnimationSpeed = 1, 0.0215
