@@ -1,35 +1,44 @@
 import "CoreLibs/graphics"
 import "../title/titleState"
 import "../freeplay/freeplaystate"
+import "../../funkin/core/wipeTransition"  
+import "../../funkin/core/SoundHandler"  
 
 local gfx <const> = playdate.graphics
 
 class("MainMenuState").extends()
 
-function MainMenuState:init(introMusic, funkinMusic, funkinSounds, funkinImages, titleScreen, stateManager)
+function MainMenuState:init(funkinMusic, funkinSounds, funkinImages, titleScreen, stateManager, SoundHandler, MusicHandler)
     MainMenuState.super.init(self)
 
     self.stateManager = stateManager
-    self.titleScreen = titleScreen 
+    self.titleScreen = titleScreen
+    self.musicHandler = MusicHandler
     self.freeplayState = FreeplayState(self) 
-
+    self.SoundHandler = SoundHandler
     self.funkinMusic = funkinMusic
     self.funkinSounds = funkinSounds
     self.funkinImages = funkinImages
-
-    self.scrollSoundPath = self.funkinSounds .. "menus/scroll"
-    self.confirmSoundPath = self.funkinSounds .. "menus/confirm"
-    self.wipeHeight = 0
-    self.wipeSpeed = 20
+    self.isConfirming = false
     self.gradientHeight = 20
-    self.wipeCompleted = false
 
     self.mainMenuBG = gfx.image.new(self.funkinImages .. "mainmenu/menuBG")
     if not self.mainMenuBG then
         error("Failed to load mainMenuBG image!")
     end
 
-    self.scaledBG = self:scaleImageToFit(self.mainMenuBG, 400, 240)
+    self.zoomFactor = 1.3
+    self.scaledBG = self:scaleImageToFit(self.mainMenuBG, 400 * self.zoomFactor, 240 * self.zoomFactor)
+
+    self.scaledBGWidth, self.scaledBGHeight = self.scaledBG:getSize()
+
+    self.backgroundOffsetY = 0
+    self.targetBackgroundOffsetY = 0
+    self.parallaxSpeed = 0.1
+    self.shiftPerSelection = 10
+
+    self.minBackgroundOffsetY = 150 - self.scaledBGHeight
+    self.maxBackgroundOffsetY = 0
 
     self.menuOptions = {
         {name = "StoryMode", image0 = nil, image1 = nil, scale = 0.5, xModifier = 0, yModifier = 0, targetScale = 0.5, yPosition = 0},
@@ -55,28 +64,35 @@ function MainMenuState:init(introMusic, funkinMusic, funkinSounds, funkinImages,
         option.yPosition = 0
     end
 
-    self.scrollSound = playdate.sound.sampleplayer.new(self.scrollSoundPath)
-    if not self.scrollSound then
-        print("Error: Failed to load scroll sound.")
-    end
-
-    self.confirmSound = playdate.sound.sampleplayer.new(self.confirmSoundPath)
-    if not self.confirmSound then
-        print("Error: Failed to load confirm sound.")
-    end
-
     self.isFlashing = false
     self.flashState = false
     self.flashTimer = nil
+
+    self:initializeMenuPositions()
+
+    self:updateTargetBackgroundOffset()
 end
 
+function MainMenuState:onEnter()
+    self.isConfirming = false
+    self.wipeTransition = WipeTransition(8, 400, 280)
+    
+end
+
+function MainMenuState:initializeMenuPositions()
+    local centerY = 240 / 2
+    for i, option in ipairs(self.menuOptions) do
+        local targetY = centerY + ((i - (self.selectedIndex + 0.5)) * self.lineSpacing)
+        option.yPosition = targetY
+    end
+end
 
 function MainMenuState:settitleScreen(titleScreen)
     self.titleScreen = titleScreen
-    
-    self.confirmSound = playdate.sound.fileplayer.new(self.titleScreen.confirm)
-    if not self.confirmSound then
-        print("Error: Failed to load confirm sound.")
+    if self.SoundHandler then
+        self.SoundHandler:playConfirm()
+    else
+        print("Error: SoundHandler is not initialized.")
     end
 end
 
@@ -95,49 +111,26 @@ function MainMenuState:scaleImageToFit(image, targetWidth, targetHeight)
     return scaledImage
 end
 
-function MainMenuState:resetWipe()
-    self.wipeHeight = 0
-    self.wipeCompleted = false
-end
-
 function MainMenuState:update()
     local gfx = playdate.graphics
     gfx.clear(gfx.kColorBlack)
 
     gfx.setImageDrawMode(gfx.kDrawModeCopy)
-    self.scaledBG:draw(0, 0)
-    gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
-    
-    if self.titleScreen.introMusic and not self.titleScreen.introMusic:isPlaying() then
-        self.titleScreen.introMusic:play()
-    elseif not self.titleScreen.introMusic then
-        print("Error: introMusic is not set in titleScreen.")
-    end
+    local bgX = (400 - self.scaledBGWidth) / 2
+    local bgY = (240 - self.scaledBGHeight) / 2 + self.backgroundOffsetY
+    self.scaledBG:draw(bgX, bgY)
 
-    if not self.wipeCompleted then
-        self:performWipe()
+    gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
+
+    self.wipeTransition:update()
+
+    if not self.wipeTransition:isCompleted() then
+        self.wipeTransition:performWipe()
     else
         self:animateOptions()
+        self:updateParallax()
         self:drawMenu()
         self:handleInput()
-    end
-end
-
-function MainMenuState:performWipe()
-    for i = 0, self.wipeHeight - 1 do
-        local alpha = 1 - (i / self.wipeHeight)
-        gfx.setDitherPattern(alpha, gfx.image.kDitherTypeBayer4x4)
-        gfx.fillRect(0, i, 400, 1)
-    end
-
-    gfx.setColor(gfx.kColorBlack)
-    gfx.fillRect(0, self.wipeHeight, 400, 240 - self.wipeHeight)
-    gfx.setImageDrawMode(gfx.kDrawModeCopy)
-    self.wipeHeight = self.wipeHeight + self.wipeSpeed
-
-    if self.wipeHeight >= 350 then
-        self.wipeHeight = 350
-        self.wipeCompleted = true
     end
 end
 
@@ -155,6 +148,16 @@ function MainMenuState:animateOptions()
         local targetY = centerY + ((i - (self.selectedIndex + 0.5)) * self.lineSpacing) + option.yModifier
 
         option.yPosition = option.yPosition + (targetY - option.yPosition) * self.animationSpeed
+    end
+end
+
+function MainMenuState:updateParallax()
+    self.backgroundOffsetY = self.backgroundOffsetY + (self.targetBackgroundOffsetY - self.backgroundOffsetY) * self.parallaxSpeed
+
+    if self.backgroundOffsetY > self.maxBackgroundOffsetY then
+        self.backgroundOffsetY = self.maxBackgroundOffsetY
+    elseif self.backgroundOffsetY < self.minBackgroundOffsetY then
+        self.backgroundOffsetY = self.minBackgroundOffsetY
     end
 end
 
@@ -196,7 +199,10 @@ function MainMenuState:drawOption(option, centerX, index)
 end
 
 function MainMenuState:changeSelection(direction)
-    
+    if self.isConfirming then
+        return
+    end
+
     if self.isFlashing then
         self.isFlashing = false
         self.flashState = false
@@ -213,34 +219,45 @@ function MainMenuState:changeSelection(direction)
         self.selectedIndex = 1
     end
 
-    
-    if self.scrollSound then
-        self.scrollSound:play()
+    self:updateTargetBackgroundOffset()
+
+    if self.SoundHandler then
+        self.SoundHandler:playScroll()
     else
-        print("Error: Scroll sound is not set or is invalid.")
+        print("Error: SoundHandler is not initialized.")
+    end
+end
+
+function MainMenuState:updateTargetBackgroundOffset()
+    self.targetBackgroundOffsetY = - (self.selectedIndex - 1) * self.shiftPerSelection
+
+    if self.targetBackgroundOffsetY < self.minBackgroundOffsetY then
+        self.targetBackgroundOffsetY = self.minBackgroundOffsetY
+    elseif self.targetBackgroundOffsetY > self.maxBackgroundOffsetY then
+        self.targetBackgroundOffsetY = self.maxBackgroundOffsetY
     end
 end
 
 function MainMenuState:handleInput()
-    
+    if self.isConfirming then
+        return
+    end
+
     local crankChange = playdate.getCrankChange()
     self.crankThreshold = self.crankThreshold or 20 
 
-    
     self.crankAccumulator = (self.crankAccumulator or 0) + crankChange
 
-    
     if math.abs(self.crankAccumulator) >= self.crankThreshold then
         if self.crankAccumulator > 0 then
             self:changeSelection(1)
         else
             self:changeSelection(-1)
         end
-        
+
         self.crankAccumulator = 0
     end
 
-    
     if playdate.buttonJustPressed(playdate.kButtonUp) then
         self:changeSelection(-1)
     elseif playdate.buttonJustPressed(playdate.kButtonDown) then
@@ -253,19 +270,22 @@ function MainMenuState:handleInput()
 end
 
 function MainMenuState:confirmSelection()
-    if self.confirmSound then
-        self.confirmSound:setVolume(1.3)
-        self.confirmSound:play()
-    else
-        print("Error: Confirm sound is not set or is invalid.")
+    if self.isConfirming then
+        return
     end
 
-    
+    self.isConfirming = true
+
+    if self.SoundHandler then
+        self.SoundHandler:playConfirm()
+    else
+        print("Error: SoundHandler is not initialized.")
+    end
+
     if not self.isFlashing then
         self.isFlashing = true
         self.flashState = true
 
-        
         self.flashTimer = playdate.timer.new(100, function()
             if not self.isFlashing then
                 return
@@ -274,7 +294,6 @@ function MainMenuState:confirmSelection()
         end)
         self.flashTimer.repeats = true
 
-        
         playdate.timer.performAfterDelay(1250, function()
             self.isFlashing = false
             if self.flashTimer then
@@ -283,7 +302,6 @@ function MainMenuState:confirmSelection()
             end
             self.flashState = false
 
-            
             local selectedOption = self.menuOptions[self.selectedIndex].name
             if selectedOption == "Freeplay" then
                 self.stateManager:switchTo("freeplay")
@@ -301,21 +319,15 @@ function MainMenuState:confirmSelection()
 end
 
 function MainMenuState:transitionTotitleScreen()
-    
-    self.wipeCompleted = false
+    self.isConfirming = false
+    self.wipeTransition:reset()
 
-    
-    if self.scrollSound then
-        self.scrollSound:play()
-    end
-
-    
     self.titleScreen:skipIntro()
 
     self.stateManager:switchTo("title")
 
     self.titleScreen.onExit = function()
-        self:resetWipe()
+        self.wipeTransition:reset()
     end
 end
 

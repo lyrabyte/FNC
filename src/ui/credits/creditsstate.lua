@@ -5,16 +5,19 @@ local gfx <const> = playdate.graphics
 
 class("CreditsState").extends()
 
-function CreditsState:init(introMusic, mainMenuState, titleState, funkinFont, funkinMusic, stateManager)
+function CreditsState:init(introMusic, mainMenuState, titleState, funkinFont, funkinMusic, stateManager, MusicHandler)
     CreditsState.super.init(self)
     self.stateManager = stateManager
     self.mainMenuState = mainMenuState
+    self.musicHandler = MusicHandler
     self.titleState = titleState 
     self.introMusic = introMusic
     self.funkinFont = funkinFont
     self.funkinMusic = funkinMusic
-    self.creditsMusic = nil
-
+    self.creditsMusic = "library/freeplayRandom"
+    
+    self.previousMusic = nil
+    
     self.textBlocks = {}
     self.scrollY = -250 
     self.scrollSpeed = 0.5 
@@ -31,17 +34,15 @@ end
 
 function CreditsState:onEnter()
     print("CreditsState:onEnter triggered!") 
-    if self.introMusic and self.introMusic:isPlaying() then
-        self.introMusic:pause()
-        self.creditsMusic = playdate.sound.fileplayer.new(self.funkinMusic .. "library/freeplayRandom")
-        self.creditsMusic:play()
-    end
-
+    self.previousMusic = self.musicHandler:getCurrentMusic()
+    self.musicHandler:stopMusic()
+    self.musicHandler:playMusic(self.creditsMusic)
 end
 
 function CreditsState:onExit()
-    if self.creditsMusic and self.creditsMusic:isPlaying() then
-        self.creditsMusic:pause()
+    self.musicHandler:stopMusic()
+    if self.previousMusic then
+        self.musicHandler:playMusic(self.previousMusic)
     end
     self.scrollY = -250 
 end
@@ -128,10 +129,6 @@ function CreditsState:update()
 
     self:adjustScrollAndMusic()
 
-    if self.creditsMusic and not self.creditsMusic:isPlaying() then
-        self.creditsMusic:play()
-    end
-
     self.scrollY += self.scrollSpeed
 
     if self.scrollY < -250 then
@@ -150,9 +147,6 @@ function CreditsState:adjustScrollAndMusic()
     if playdate.isCrankDocked() then
 
         self.scrollSpeed = 0.5
-        if self.creditsMusic then
-            self.creditsMusic:setRate(1)
-        end
         return
     end
 
@@ -167,32 +161,24 @@ function CreditsState:adjustScrollAndMusic()
             local pitchChange = 0.01 * crankChange 
             local playbackRate = 1 + pitchChange 
             playbackRate = math.max(0.5, math.min(2, playbackRate)) 
-            self.creditsMusic:setRate(playbackRate)
         end
     else
 
         self.scrollSpeed = 0.5
-        if self.creditsMusic then
-            self.creditsMusic:setRate(1)
-        end
+
     end
 end
 
 function CreditsState:exitToMainMenu()
-
-    if self.creditsMusic and self.creditsMusic:isPlaying() then
-        self.creditsMusic:stop()
-    end
+    self.musicHandler:stopMusic()
     self.scrollY = -250 
 
-    self.mainMenuState:resetWipe()
     self.stateManager:switchTo("mainMenu")
 end
 
 function CreditsState:handleInput()
     if playdate.buttonJustPressed(playdate.kButtonB) then
 
-        self.mainMenuState:resetWipe()
         self.stateManager:switchTo("mainMenu")
     end
 end

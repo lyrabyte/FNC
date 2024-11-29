@@ -23,16 +23,11 @@ function FreeplayState:update()
     if self.titleState.introMusic:isPlaying() then
         self.titleState.introMusic:pause()
     end
-    
     self:handleInput()
 end
 
 function FreeplayState:handleInput()
     if playdate.buttonJustPressed(playdate.kButtonB) then
-        
-        self.mainMenuState:resetWipe()
-        
-        
         self.stateManager:switchTo("mainMenu")
     end
 end

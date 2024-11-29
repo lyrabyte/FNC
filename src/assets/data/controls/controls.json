@@ -1,0 +1,8 @@
+{
+    "controls": {
+        "Left": "playdate.kButtonLeft",
+        "Down": "playdate.kButtonRight",
+        "Up": "playdate.kButtonB",
+        "Right": "playdate.kButtonA"
+    }
+}
