@@ -66,10 +66,11 @@ function TitleState:initializeGfAnimation()
     )
 end
 
+-- TODO: make better way of getting the intro sequence on time, this shit is funkin' ass 
 function TitleState:setupIntroSequence() -- The timing is wrong on the SDK Simulator, but it's great on the actual hardware, Don't touch
     self.textLines = {
-        {beat = 0.9, action = function() self:createCoolText({"Lyrabyte"}) end},
-        {beat = 2.25, action = function() self:addMoreText("presents") end},
+        {beat = 0.8, action = function() self:createCoolText({"Lyrabyte"}) end},
+        {beat = 2.28, action = function() self:addMoreText("presents") end},
         {beat = 3.1, action = self.deleteCoolText},
         {beat = 4.01, action = function() self:createCoolText({"A Port", "of"}) end},
         {beat = 5.6, action = self.showImage},
