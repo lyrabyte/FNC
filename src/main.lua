@@ -27,8 +27,6 @@ local controls = "assets/data/controls/controls.json"
 
 local conductor = Conductor(musicPath)
 
-local introMusic = playdate.sound.fileplayer.new(musicPath)
-
 local stateManager = StateManager()
 
 local SoundHandler = SoundHandler(funkinSounds)
@@ -37,7 +35,7 @@ local MusicHandler = MusicHandler(funkinMusic)
 local titleScreen = TitleState(
     stateManager,
     conductor,
-    introMusic,
+    musicPath,
     funkinMusic,
     funkinSounds,
     funkinImages,
@@ -59,7 +57,6 @@ local mainMenuState = MainMenuState(
 )
 
 local freeplayState = FreeplayState(
-    introMusic,
     mainMenuState,
     titleScreen,
     stateManager,
@@ -68,7 +65,6 @@ local freeplayState = FreeplayState(
 )
 
 local optionsState = OptionsState(
-    introMusic,
     funkinWeekFnt,
     funkinImages,
     mainMenuState,
@@ -90,7 +86,6 @@ local controlsState = ControlsState(
 )
 
 local storyState = StoryState(
-    introMusic,
     mainMenuState,
     titleScreen,
     stateManager,
@@ -99,7 +94,6 @@ local storyState = StoryState(
 )
 
 local creditsState = CreditsState(
-    introMusic,
     mainMenuState,
     titleScreen,
     funkinFont,

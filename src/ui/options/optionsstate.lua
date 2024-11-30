@@ -7,14 +7,13 @@ local gfx <const> = playdate.graphics
 
 class("OptionsState").extends(gfx.sprite)
 
-function OptionsState:init(introMusic, funkinWeekFnt, funkinImages, mainMenuState, titleState, stateManager, SoundHandler)
+function OptionsState:init(funkinWeekFnt, funkinImages, mainMenuState, titleState, stateManager, SoundHandler)
     OptionsState.super.init(self)
 
     self.stateManager = stateManager
     self.mainMenuState = mainMenuState
     self.titleState = titleState
     self.SoundHandler = SoundHandler
-    self.introMusic = introMusic
     self.funkinImages = funkinImages
     self.funkinWeekFnt = funkinWeekFnt
 

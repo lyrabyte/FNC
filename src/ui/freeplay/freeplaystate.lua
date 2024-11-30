@@ -5,7 +5,7 @@ local gfx <const> = playdate.graphics
 
 class("FreeplayState").extends()
 
-function FreeplayState:init(introMusic, mainMenuState, titleState, stateManager)
+function FreeplayState:init(mainMenuState, titleState, stateManager)
     FreeplayState.super.init(self)
     self.stateManager = stateManager
 
@@ -20,9 +20,6 @@ function FreeplayState:update()
     
     gfx.drawTextAligned("Freeplay Mode", 200, 120, kTextAlignment.center)
     
-    if self.titleState.introMusic:isPlaying() then
-        self.titleState.introMusic:pause()
-    end
     self:handleInput()
 end
 

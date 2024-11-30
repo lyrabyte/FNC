@@ -5,7 +5,7 @@ local gfx <const> = playdate.graphics
 
 class("StoryState").extends()
 
-function StoryState:init(introMusic, mainMenuState, titleState, stateManager)
+function StoryState:init(mainMenuState, titleState, stateManager)
     StoryState.super.init(self)
     self.stateManager = stateManager
     self.mainMenuState = mainMenuState 
@@ -15,9 +15,6 @@ end
 function StoryState:update()
     gfx.clear(gfx.kColorBlack)
     gfx.drawTextAligned("Story Mode", 200, 120, kTextAlignment.center)
-    if self.titleState.introMusic:isPlaying() then
-        self.titleState.introMusic:pause()
-    end
     
     self:handleInput()
 end

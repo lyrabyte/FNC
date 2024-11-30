@@ -5,13 +5,12 @@ local gfx <const> = playdate.graphics
 
 class("CreditsState").extends()
 
-function CreditsState:init(introMusic, mainMenuState, titleState, funkinFont, funkinMusic, stateManager, MusicHandler)
+function CreditsState:init(mainMenuState, titleState, funkinFont, funkinMusic, stateManager, MusicHandler)
     CreditsState.super.init(self)
     self.stateManager = stateManager
     self.mainMenuState = mainMenuState
     self.musicHandler = MusicHandler
     self.titleState = titleState 
-    self.introMusic = introMusic
     self.funkinFont = funkinFont
     self.funkinMusic = funkinMusic
     self.creditsMusic = "library/freeplayRandom"
@@ -152,15 +151,15 @@ function CreditsState:adjustScrollAndMusic()
     local crankChange = playdate.getCrankChange()
 
     if crankChange ~= 0 then
-=        self.scrollSpeed = crankChange * 0.5
+        self.scrollSpeed = crankChange * 0.5
 
         if self.creditsMusic and self.musicHandler then
-=            local pitchChange = 0.01 * crankChange
+            local pitchChange = 0.01 * crankChange
             local playbackRate = 1 + pitchChange
 
-=            playbackRate = math.max(0.5, math.min(2, playbackRate))
+            playbackRate = math.max(0.5, math.min(2, playbackRate))
 
-=            self.musicHandler:setPlaybackRate(playbackRate)
+            self.musicHandler:setPlaybackRate(playbackRate)
         end
     else
         self.scrollSpeed = 0.5
