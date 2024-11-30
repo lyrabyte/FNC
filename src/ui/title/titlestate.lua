@@ -129,7 +129,7 @@ function TitleState:onEnter()
     else
         self.currentCheatMusic = "freakyMenu"
         self:setGfAnimationSpeed(0.0215)
-        self.bopper:setBopFrequencyMultiplier(1.3333333334)
+        self.bopper:setBopFrequencyMultiplier(4 / 3)
         self.musicHandler:playMusic(self.mainMusic)
     end
 end
@@ -306,7 +306,7 @@ function TitleState:activateCheatCode()
         self.currentCheatMusic = "freakyMenu"
         self.musicHandler:stopMusic()
         self:setGfAnimationSpeed(0.0215)
-        self.bopper:setBopFrequencyMultiplier(1.3333333334)
+        self.bopper:setBopFrequencyMultiplier(4 / 3)
 
         self.musicHandler:playMusic(self.mainMusic)
     else
@@ -397,7 +397,7 @@ end
 function TitleState:skipIntro()
     self.conductor:resume()
     self.flashTriggered = false
-    self.bopper:setBopFrequencyMultiplier(1.3333333334)
+    self.bopper:setBopFrequencyMultiplier(4 / 3)
     self:deleteCoolText()
     self:hideImage()
     self.nextBeatIndex = #self.textLines + 1
