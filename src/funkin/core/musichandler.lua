@@ -53,6 +53,12 @@ function MusicHandler:getCurrentMusic()
     return self.currentTrack
 end
 
+function MusicHandler:setPlaybackRate(rate)
+    if self.currentMusic then
+        self.currentMusic:setRate(rate)
+    end
+end
+
 function MusicHandler:continuous()
     if self.currentMusic and self.isPlaying then
         return

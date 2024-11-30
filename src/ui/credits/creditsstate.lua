@@ -145,27 +145,29 @@ end
 
 function CreditsState:adjustScrollAndMusic()
     if playdate.isCrankDocked() then
-
         self.scrollSpeed = 0.5
         return
     end
 
-    local crankChange = playdate.getCrankChange() 
+    local crankChange = playdate.getCrankChange()
 
     if crankChange ~= 0 then
+=        self.scrollSpeed = crankChange * 0.5
 
-        self.scrollSpeed = crankChange * 0.5 
+        if self.creditsMusic and self.musicHandler then
+=            local pitchChange = 0.01 * crankChange
+            local playbackRate = 1 + pitchChange
 
-        if self.creditsMusic then
+=            playbackRate = math.max(0.5, math.min(2, playbackRate))
 
-            local pitchChange = 0.01 * crankChange 
-            local playbackRate = 1 + pitchChange 
-            playbackRate = math.max(0.5, math.min(2, playbackRate)) 
+=            self.musicHandler:setPlaybackRate(playbackRate)
         end
     else
-
         self.scrollSpeed = 0.5
 
+        if self.musicHandler then
+            self.musicHandler:setPlaybackRate(1)
+        end
     end
 end
 
