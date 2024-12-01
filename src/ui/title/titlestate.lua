@@ -8,7 +8,7 @@ local gfx <const> = playdate.graphics
 
 class("TitleState").extends()
 
-function TitleState:init(stateManager, conductor, audioPlayer, funkinMusic, funkinSounds, funkinImages, funkinFont, introTexts, skipIntro, SoundHandler, MusicHandler)
+function TitleState:init(stateManager, conductor, musicPath, funkinMusic, funkinSounds, funkinImages, funkinFont, introTexts, skipIntro, SoundHandler, MusicHandler)
     TitleState.super.init(self)
 
     self.stateManager = stateManager
@@ -21,34 +21,41 @@ function TitleState:init(stateManager, conductor, audioPlayer, funkinMusic, funk
     self.funkinImages = funkinImages
     self.funkinFont = funkinFont
 
+    self.crankinImage = gfx.image.new(funkinImages .. "crankin")
+    assert(self.crankinImage, "Error: Could not load crankin image at path: " .. funkinImages .. "crankin")
+    
+    self.crankinVisible = false
+    self.crankinX, self.crankinY = -5, -70
+    self.crankinScale = 0.9
     self.inputEnabled = true
+
     assert(MusicHandler, "Error: MusicHandler must not be nil")
 
     self.canActivateCheatCode = false
     self.bopper = Bopper(conductor)
 
     gfx.setFont(funkinFont)
-    
+
     self.funkinImage = gfx.image.new(funkinImages .. "funkin")
     assert(self.funkinImage, "Error: Could not load funkin image at path: " .. funkinImages .. "funkin")
-    
+
     self.gfDanceTable = gfx.imagetable.new(funkinImages .. "title/gfDanceTitle")
     assert(self.gfDanceTable, "Error: Could not load gfDance imagetable at path: " .. funkinImages .. "title/gfDanceTitle")
-    
+
     self.gfRingTone = "title/girlfriendsRingtone"
     self.mainMusic = "title/freakyMenu"
 
     self.gfScale, self.gfX, self.gfY = 0.28, 305, 180
     self.gfCurrentFrame, self.gfAnimationSpeed = 1, 0.0215
     self:initializeGfAnimation()
-    
+
     self.showingImage, self.showGif = false, false
     self.imageX, self.imageY, self.imageScale = 97, 118, 1.0
-    
+
     self.introTexts = self:readIntroTexts(introTexts)
     assert(#self.introTexts > 0, "Error: Intro texts file is empty or could not be read")
     self.currentRandomIntroText = nil
-    
+
     if not skipIntro then
         self:setupIntroSequence()
     else
@@ -66,57 +73,57 @@ function TitleState:initializeGfAnimation()
     )
 end
 
--- TODO: make better way of getting the intro sequence on time, this shit is funkin' ass 
-function TitleState:setupIntroSequence() -- The timing is wrong on the SDK Simulator, but it's great on the actual hardware, Don't touch
-    self.textLines = {
-        {beat = 0.8, action = function() self:createCoolText({"Lyrabyte"}) end},
-        {beat = 2.28, action = function() self:addMoreText("presents") end},
-        {beat = 3.1, action = self.deleteCoolText},
-        {beat = 4.01, action = function() self:createCoolText({"A Port", "of"}) end},
-        {beat = 5.6, action = self.showImage},
-        {beat = 6.4, action = function()
-            self:deleteCoolText()
-            self:hideImage()
-        end},
-        {beat = 7.31, action = function()
-            self.currentRandomIntroText = self.introTexts[math.random(#self.introTexts)]
-            if self.currentRandomIntroText then
-                self:addMoreText(self.currentRandomIntroText[1] or "")
-            end
-        end},
-        {beat = 8.78, action = function()
-            if self.currentRandomIntroText then
-                self:addMoreText(self.currentRandomIntroText[2] or "")
-                self.currentRandomIntroText = nil
-            end
-        end},
-        {beat = 9.65, action = self.deleteCoolText},
-        {beat = 10.30, action = function() self:addMoreText("Friday") end},
-        {beat = 11.20, action = function() self:addMoreText("Night") end},
-        {beat = 12.02, action = function() self:addMoreText("Crankin'") end},
-        {beat = 13.2, action = self.skipIntro},
-    }
-
-    table.sort(self.textLines, function(a, b) return a.beat < b.beat end)
-
-    self.nextBeatIndex = 1
+function TitleState:setupIntroSequence()
     self.shownText = {}
-
+    self.currentRandomIntroText = nil
     self.musicHandler:playMusic(self.mainMusic)
-    self.bopper:setBopFrequencyMultiplier(0.02)
-
     self.flashActive, self.canStart, self.flashTriggered = false, false, false
-
     self.fadeImage = gfx.image.new(400, 240, gfx.kColorWhite)
     self.fadeImageOpacity = 1.0
-
     self.startMessageOpacity, self.startMessageFadeOut = 1.0, true
-
     self.inputSequence = {}
     self.cheatCode = { 
         playdate.kButtonLeft, playdate.kButtonRight, playdate.kButtonLeft, playdate.kButtonRight, 
         playdate.kButtonUp, playdate.kButtonDown, playdate.kButtonUp, playdate.kButtonDown 
     }
+
+    self.introTimers = {}
+    table.insert(self.introTimers, playdate.timer.performAfterDelay(300, function() self:createCoolText({"Lyrabyte"}) end))
+    table.insert(self.introTimers, playdate.timer.performAfterDelay(1475, function() self:addMoreText("presents") end))
+    table.insert(self.introTimers, playdate.timer.performAfterDelay(2205, function() self:deleteCoolText() end))
+    table.insert(self.introTimers, playdate.timer.performAfterDelay(2805, function() self:createCoolText({"A Port", "of"}) end))
+    table.insert(self.introTimers, playdate.timer.performAfterDelay(3850, function() self:showImage() end))
+    table.insert(self.introTimers, playdate.timer.performAfterDelay(4655, function()
+        self:deleteCoolText()
+        self:hideImage()
+    end))
+    table.insert(self.introTimers, playdate.timer.performAfterDelay(5130, function()
+        self.currentRandomIntroText = self.introTexts[math.random(#self.introTexts)]
+        if self.currentRandomIntroText then
+            self:addMoreText(self.currentRandomIntroText[1] or "")
+        end
+    end))
+    table.insert(self.introTimers, playdate.timer.performAfterDelay(6300, function()
+        if self.currentRandomIntroText then
+            self:addMoreText(self.currentRandomIntroText[2] or "")
+            self.currentRandomIntroText = nil
+        end
+    end))
+    table.insert(self.introTimers, playdate.timer.performAfterDelay(6900, function()
+        self:deleteCoolText()
+    end))
+    table.insert(self.introTimers, playdate.timer.performAfterDelay(7475, function()
+        self:addMoreText("Friday")
+    end))
+    table.insert(self.introTimers, playdate.timer.performAfterDelay(8075, function()
+        self:addMoreText("Night")
+    end))
+    table.insert(self.introTimers, playdate.timer.performAfterDelay(8675, function()
+        self:addMoreText("Crankin'")
+    end))
+    table.insert(self.introTimers, playdate.timer.performAfterDelay(9275, function()
+        self:skipIntro()
+    end))
 end
 
 function TitleState:onEnter()
@@ -129,7 +136,7 @@ function TitleState:onEnter()
     else
         self.currentCheatMusic = "freakyMenu"
         self:setGfAnimationSpeed(0.0215)
-        self.bopper:setBopFrequencyMultiplier(4 / 3)
+        self.bopper:setBopFrequencyMultiplier(4 / 3) 
         self.musicHandler:playMusic(self.mainMusic)
     end
 end
@@ -157,7 +164,7 @@ end
 
 function TitleState:update()
     gfx.clear(gfx.kColorBlack)
-    gfx.setFont(funkinFont)
+    gfx.setFont(self.funkinFont)
 
     if self.inputEnabled then
         self:checkCheatCode()
@@ -173,16 +180,6 @@ function TitleState:update()
         end
     end
 
-    local elapsedTime = playdate.getCurrentTimeMilliseconds()
-    local beatDurationMs = self.conductor.stepLengthMs * 4
-    local currentBeat = self.conductor.globalStep / 4 + (elapsedTime - self.conductor.lastStepTime) / beatDurationMs
-
-    while self.nextBeatIndex <= #self.textLines and currentBeat >= self.textLines[self.nextBeatIndex].beat do
-        self.bopper:setBopFrequencyMultiplier(0.4)
-        self.textLines[self.nextBeatIndex].action(self)
-        self.nextBeatIndex += 1
-    end
-
     gfx.setFont(gfx.getFont())
     gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
 
@@ -194,31 +191,38 @@ function TitleState:update()
         end
     end
 
-    if self.nextBeatIndex > #self.textLines then
+    if self.canStart then
         self:drawStartMessage()
     end
 
     self.bopper:update()
 
     if self.showingImage and self.funkinImage then
-        local bump = self.bopper:getBumpValue()
-        local adjustedScale = self.imageScale + bump
+        local adjustedScale = self.imageScale
         gfx.setImageDrawMode(gfx.kDrawModeCopy)
         self.funkinImage:drawScaled(self.imageX, self.imageY, adjustedScale)
         gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
     end
+
+    if self.crankinVisible and self.crankinImage then
+        local bump = self.bopper:getBumpValue()
+        local adjustedScale = self.crankinScale + bump
+        gfx.setImageDrawMode(gfx.kDrawModeCopy)
+        self.crankinImage:drawScaled(self.crankinX, self.crankinY, adjustedScale)
+        gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
+    end    
 
     if self.showGif and self.gfDanceTable then
         gfx.setImageDrawMode(gfx.kDrawModeCopy)
         local frame = self.gfDanceTable:getImage(self.gfCurrentFrame)
         gfx.pushContext()
         gfx.setDrawOffset(0, 0)
-        
+
         local scaledWidth = math.floor(frame.width * self.gfScale + 0.5)
         local scaledHeight = math.floor(frame.height * self.gfScale + 0.5)
         local drawX = self.gfX - scaledWidth // 2
         local drawY = self.gfY - scaledHeight // 2
-        
+
         frame:drawScaled(drawX, drawY, self.gfScale)
         gfx.popContext()
     end
@@ -294,19 +298,18 @@ function TitleState:checkCheatCode()
 end
 
 function TitleState:activateCheatCode()
-    self.canActivateCheatCode = false
     self.flashTriggered = false
     self:startWhiteFlash()
 
     if self.SoundHandler then
         self.SoundHandler:playConfirm()
     end
-    
+
     if self.currentCheatMusic == "gfRingTone" then
         self.currentCheatMusic = "freakyMenu"
         self.musicHandler:stopMusic()
         self:setGfAnimationSpeed(0.0215)
-        self.bopper:setBopFrequencyMultiplier(4 / 3)
+        self.bopper:setBopFrequencyMultiplier(4 / 3) 
 
         self.musicHandler:playMusic(self.mainMusic)
     else
@@ -397,12 +400,9 @@ end
 function TitleState:skipIntro()
     self.conductor:resume()
     self.flashTriggered = false
-    self.bopper:setBopFrequencyMultiplier(4 / 3)
+    self.bopper:setBopFrequencyMultiplier(4 / 3) 
     self:deleteCoolText()
     self:hideImage()
-    self.nextBeatIndex = #self.textLines + 1
-    self.imageX, self.imageY = 0, 0
-    self.showingImage = true
     self:startWhiteFlash()
     self.canActivateCheatCode = true
     self.showGif = true
@@ -410,6 +410,17 @@ function TitleState:skipIntro()
     self.inputEnabled = true
     self.transitionTriggered = false
     self:restartGfAnimationTimer()
+
+    self.crankinVisible = true
+
+    if self.introTimers then
+        for _, timer in ipairs(self.introTimers) do
+            if timer and timer.timeLeft > 0 then
+                timer:remove()
+            end
+        end
+        self.introTimers = nil
+    end
 end
 
 function TitleState:startWhiteFlash()

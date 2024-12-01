@@ -264,7 +264,19 @@ function ControlsState:handleInput()
     elseif playdate.buttonJustPressed(playdate.kButtonB) then
         self:exitToOptions()
     end
+
+    local crankChange = playdate.getCrankChange()
+
+    local sensitivityThreshold = 45
+    self.crankBuffer = (self.crankBuffer or 0) + crankChange
+
+    if math.abs(self.crankBuffer) >= sensitivityThreshold then
+        local steps = math.floor(self.crankBuffer / sensitivityThreshold)
+        self:changeSelection(steps)
+        self.crankBuffer = self.crankBuffer % sensitivityThreshold
+    end
 end
+
 
 function ControlsState:handleEditingInput()
     local buttons = {

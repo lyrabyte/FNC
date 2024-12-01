@@ -76,7 +76,7 @@ end
 function MainMenuState:onEnter()
     self.isConfirming = false
     self.wipeTransition = WipeTransition(8, 400, 280)
-    
+
 end
 
 function MainMenuState:initializeMenuPositions()
@@ -244,8 +244,7 @@ function MainMenuState:handleInput()
     end
 
     local crankChange = playdate.getCrankChange()
-    self.crankThreshold = self.crankThreshold or 20 
-
+    self.crankThreshold = self.crankThreshold or 45
     self.crankAccumulator = (self.crankAccumulator or 0) + crankChange
 
     if math.abs(self.crankAccumulator) >= self.crankThreshold then
@@ -255,7 +254,7 @@ function MainMenuState:handleInput()
             self:changeSelection(-1)
         end
 
-        self.crankAccumulator = 0
+        self.crankAccumulator = self.crankAccumulator % self.crankThreshold
     end
 
     if playdate.buttonJustPressed(playdate.kButtonUp) then

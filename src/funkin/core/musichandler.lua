@@ -21,6 +21,11 @@ function MusicHandler:playMusic(fileName)
     self.currentMusic = playdate.sound.fileplayer.new(fullPath)
     assert(self.currentMusic, "Error: Failed to load music at path: " .. fullPath)
     self.currentMusic:setVolume(1)
+
+    self.currentMusic:setFinishCallback(function()
+        self.currentMusic:play()
+    end)
+
     self.currentMusic:play()
     self.currentTrack = fileName
     self.isPlaying = true

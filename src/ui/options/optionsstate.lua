@@ -166,6 +166,7 @@ function OptionsState:drawMenu()
 end
 
 function OptionsState:handleInput()
+
     if playdate.buttonJustPressed(playdate.kButtonUp) then
         self:changeSelection(-1)
     elseif playdate.buttonJustPressed(playdate.kButtonDown) then
@@ -174,6 +175,17 @@ function OptionsState:handleInput()
         self:confirmSelection()
     elseif playdate.buttonJustPressed(playdate.kButtonB) then
         self:startTransitionToMainMenu()
+    end
+
+    local crankChange = playdate.getCrankChange()
+
+    local sensitivityThreshold = 45 
+    self.crankBuffer = (self.crankBuffer or 0) + crankChange
+
+    if math.abs(self.crankBuffer) >= sensitivityThreshold then
+        local steps = math.floor(self.crankBuffer / sensitivityThreshold)
+        self:changeSelection(steps)
+        self.crankBuffer = self.crankBuffer % sensitivityThreshold 
     end
 end
 
