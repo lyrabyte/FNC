@@ -6,7 +6,7 @@ import "/funkin/core/statemanager"
 import "/ui/title/titlestate"
 import "/ui/mainmenu/mainmenustate"
 import "/ui/options/optionsstate"
-import "/ui/options/controlsstate"
+import "/ui/options/controls"
 import "/ui/credits/creditsstate"
 import "/ui/story/storystate"
 import "/funkin/core/SoundHandler"
@@ -74,7 +74,7 @@ local optionsState = OptionsState(
     MusicHandler
 )
 
-local controlsState = ControlsState(
+local Controls = Controls(
     funkinWeekFnt,
     funkinSounds,
     funkinImages,
@@ -111,7 +111,7 @@ stateManager:addState("title", titleScreen)
 stateManager:addState("mainMenu", mainMenuState)
 stateManager:addState("freeplay", freeplayState)
 stateManager:addState("options", optionsState)
-stateManager:addState("controls", controlsState)
+stateManager:addState("controls", Controls)
 stateManager:addState("credits", creditsState)
 stateManager:addState("story", storyState)
 

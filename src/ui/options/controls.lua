@@ -5,10 +5,10 @@ import "../../funkin/core/SoundHandler"
 
 local gfx <const> = playdate.graphics
 
-class("ControlsState").extends(gfx.sprite)
+class("Controls").extends(gfx.sprite)
 
-function ControlsState:init(funkinWeekFnt, funkinSounds, funkinImages, optionsState, controlsFilePath, stateManager, SoundHandler)
-    ControlsState.super.init(self)
+function Controls:init(funkinWeekFnt, funkinSounds, funkinImages, optionsState, controlsFilePath, stateManager, SoundHandler)
+    Controls.super.init(self)
 
     self.stateManager = stateManager
     self.optionsState = optionsState
@@ -60,7 +60,7 @@ function ControlsState:init(funkinWeekFnt, funkinSounds, funkinImages, optionsSt
     self:add()
 end
 
-function ControlsState:initMenuPositions()
+function Controls:initMenuPositions()
     local centerY = 240 / 2
     for i = 1, #self.actions do
         self.scales[i] = self.defaultScale
@@ -68,7 +68,7 @@ function ControlsState:initMenuPositions()
     end
 end
 
-function ControlsState:loadControls()
+function Controls:loadControls()
     local file = playdate.file.open(self.controlsFilePath, playdate.file.kFileRead)
     if not file then
         error("Failed to load controls file!")
@@ -99,7 +99,7 @@ function ControlsState:loadControls()
     return decodedData.controls
 end
 
-function ControlsState:saveControls()
+function Controls:saveControls()
     local file = playdate.file.open(self.controlsFilePath, playdate.file.kFileWrite)
     if not file then
         error("Failed to save controls file!")
@@ -115,7 +115,7 @@ function ControlsState:saveControls()
     file:close()
 end
 
-function ControlsState:scaleImageToFit(image, targetWidth, targetHeight)
+function Controls:scaleImageToFit(image, targetWidth, targetHeight)
     local imgWidth, imgHeight = image:getSize()
     local scaleX = targetWidth / imgWidth
     local scaleY = targetHeight / imgHeight
@@ -130,12 +130,12 @@ function ControlsState:scaleImageToFit(image, targetWidth, targetHeight)
     return scaledImage
 end
 
-function ControlsState:onEnter()
+function Controls:onEnter()
     self.wipeTransition:reset()
     self.wipeInProgress = true
 end
 
-function ControlsState:update()
+function Controls:update()
     gfx.clear(gfx.kColorBlack)
 
     gfx.setImageDrawMode(gfx.kDrawModeCopy)
@@ -158,7 +158,7 @@ function ControlsState:update()
     self:handleInput()
 end
 
-function ControlsState:animateMenu()
+function Controls:animateMenu()
     local centerY = 240 / 2
     for i = 1, #self.actions do
 
@@ -173,7 +173,7 @@ function ControlsState:animateMenu()
     end
 end
 
-function ControlsState:animateHeader()
+function Controls:animateHeader()
 
     if self.isEditing then
 
@@ -193,7 +193,7 @@ function ControlsState:animateHeader()
     self.headerYPosition = self.headerYPosition + (self.headerTargetY - self.headerYPosition) * self.animationSpeed
 end
 
-function ControlsState:drawHeader()
+function Controls:drawHeader()
     local headerText = self.isEditing and "Press New Button" or "Notes"
 
     local drawPositionY = self.isEditing and 0 or self.headerYPosition
@@ -205,7 +205,7 @@ function ControlsState:drawHeader()
     end
 end
 
-function ControlsState:drawControls()
+function Controls:drawControls()
     if self.isEditing then
 
         local i = self.selectedIndex
@@ -249,7 +249,7 @@ function ControlsState:drawControls()
     end
 end
 
-function ControlsState:handleInput()
+function Controls:handleInput()
     if self.isEditing then
         self:handleEditingInput()
         return
@@ -278,7 +278,7 @@ function ControlsState:handleInput()
 end
 
 
-function ControlsState:handleEditingInput()
+function Controls:handleEditingInput()
     local buttons = {
         playdate.kButtonLeft,
         playdate.kButtonRight,
@@ -319,11 +319,11 @@ function ControlsState:handleEditingInput()
     end
 end
 
-function ControlsState:startEditing()
+function Controls:startEditing()
     self.isEditing = true
 end
 
-function ControlsState:changeSelection(direction)
+function Controls:changeSelection(direction)
     self.selectedIndex = self.selectedIndex + direction
     if self.selectedIndex < 1 then
         self.selectedIndex = #self.actions
@@ -336,8 +336,8 @@ function ControlsState:changeSelection(direction)
     print(string.format("Selected Index: %d, Action: %s", self.selectedIndex, self.actions[self.selectedIndex]))
 end
 
-function ControlsState:exitToOptions()
+function Controls:exitToOptions()
     self.stateManager:switchTo("options")
 end
 
-return ControlsState
+return Controls

@@ -226,11 +226,11 @@ function OptionsState:confirmSelection()
             self.flashingOption = nil
 
             if selectedOption == "Preferences" then
-                print("Navigate to Sound Options")
+                self.stateManager:switchTo("preferences")
             elseif selectedOption == "Controls" then
                 self.stateManager:switchTo("controls")
             elseif selectedOption == "Input Offsets" then
-                print("Navigate to Display Options")
+                print("Navigate to Input Offsets")
             elseif selectedOption == "Exit" then
                 self:startTransitionToMainMenu()
             end
