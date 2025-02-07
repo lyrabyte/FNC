@@ -60,8 +60,8 @@ local freeplayState = FreeplayState(
     mainMenuState,
     titleScreen,
     stateManager,
-    SoundHandler,
-    MusicHandler
+    funkinImages,
+    SoundHandler
 )
 
 local optionsState = OptionsState(
